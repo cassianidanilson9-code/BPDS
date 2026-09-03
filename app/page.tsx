@@ -31,7 +31,7 @@ export default function TodoApp() {
       <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-xl">
         <h1 className="text-2xl font-bold mb-4 text-center">Mis Tareas - Grupo</h1>
 
-        {/* INPUT DE CREACIÓN (Tu responsabilidad como Integrante 2) */}
+        {/* INPUT DE CREACIÓN */}
         <div className="mb-6">
           <input
             type="text"
@@ -43,7 +43,7 @@ export default function TodoApp() {
           />
         </div>
 
-        {/* CONTENEDOR DE TAREAS (Espacio listo para que tus compañeros sumen Read, Update y Delete) */}
+        {/* AQUÍ ES TU PARTE: LISTAR LAS TAREAS CON .map() */}
         <div className="space-y-3">
           {tasks.length === 0 ? (
             <p className="text-center text-zinc-500 text-sm">No hay tareas. Escribe algo y presiona Enter.</p>
