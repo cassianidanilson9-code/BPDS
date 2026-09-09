@@ -1,24 +1,25 @@
-'use client';
+"use client";
 
-import { useState, KeyboardEvent } from 'react';
+import { useState, KeyboardEvent } from "react";
 
 interface Task {
   id: number;
   text: string;
+  completed?: boolean;
 }
 
 export default function TodoApp() {
   const [tareas, setTareas] = useState<Task[]>([]);
-  const [inputText, setInputText] = useState('');
-  
+  const [inputText, setInputText] = useState("");
+
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editText, setEditText] = useState('');
+  const [editText, setEditText] = useState("");
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       const textoLimpio = inputText.trim();
-      if (textoLimpio === '') return;
+      if (textoLimpio === "") return;
 
       const nuevaTarea: Task = {
         id: Date.now(),
@@ -26,24 +27,38 @@ export default function TodoApp() {
       };
 
       setTareas((prev) => [...prev, nuevaTarea]);
-      setInputText('');
+      setInputText("");
     }
   };
 
+  //entra en modo ediccion
   const startEditing = (task: Task) => {
     setEditingId(task.id);
     setEditText(task.text);
   };
 
+  
+  // guarda cambios 
   const saveEdit = (id: number) => {
-    if (editText.trim() !== '') {
+
+    if (editingId !== id) return; // Evita guardar si no es la tarea que se está editando -nuevo
+
+    if (editText.trim() !== "") {
       setTareas((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, text: editText.trim() } : t))
+        prev.map((t) => (t.id === id ? { ...t, text: editText.trim() } : t)),
       );
     }
     setEditingId(null);
   };
 
+  // update - marcar-desenmarcar como completada (solo tacha)
+  const toggleComplete = (id: number) => {
+    setTareas((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
+    );
+  };
+
+  // delete  - eliminar tarea -nuevo
   const handleDelete = (id: number) => {
     setTareas((prev) => prev.filter((task) => task.id !== id));
   };
@@ -51,8 +66,11 @@ export default function TodoApp() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-start p-6 bg-zinc-950 text-white">
       <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-xl">
-        <h1 className="text-2xl font-bold mb-4 text-center">Mis Tareas - Grupo CUC</h1>
+        <h1 className="text-2xl font-bold mb-4 text-center">
+          Mis Tareas - Grupo CUC
+        </h1>
 
+        {/* input para crear una tarea nueva */}
         <div className="mb-6">
           <input
             type="text"
@@ -64,9 +82,12 @@ export default function TodoApp() {
           />
         </div>
 
+        {/*listado de tareas*/}
         <div className="space-y-3">
           {tareas.length === 0 ? (
-            <p className="text-center text-zinc-500 text-sm">No hay tareas. Escribe algo y presiona Enter.</p>
+            <p className="text-center text-zinc-500 text-sm">
+              No hay tareas. Escribe algo y presiona Enter.
+            </p>
           ) : (
             tareas.map((task) => (
               <div
@@ -74,14 +95,19 @@ export default function TodoApp() {
                 className="flex items-center justify-between p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg gap-2"
               >
                 {editingId === task.id ? (
+                  // modo ediccion input con autoguardado 
                   <div className="flex flex-1 gap-2 items-center">
                     <input
                       type="text"
                       value={editText}
                       onChange={(e) => setEditText(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') saveEdit(task.id);
+                        if (e.key === "Enter") saveEdit(task.id);
                       }}
+                      
+                      // auto guardado al salir de campo  -nuevo
+                      onBlur={() => saveEdit(task.id)}
+
                       className="flex-1 px-2 py-1 text-sm bg-zinc-700 border border-zinc-600 rounded text-white focus:outline-none"
                       autoFocus
                     />
@@ -94,8 +120,24 @@ export default function TodoApp() {
                     </button>
                   </div>
                 ) : (
+                  // modo normal checkbox texto acciones 
                   <>
-                    <span className="text-sm text-zinc-200 break-all flex-1">{task.text}</span>
+                    <input
+                      type="checkbox"
+                      checked={task.completed ?? false}
+                      onChange={() => toggleComplete(task.id)}
+                      aria-label={`Marcar "${task.text}" como completada`}
+                      className="h-4 w-4 accent-green-600"
+                    />
+                    <span
+                      className={`text-sm break-all flex-1 ${
+                        task.completed
+                          ? "text-zinc-500 line-through"
+                          : "text-zinc-200"
+                      }`}
+                    >
+                      {task.text}
+                    </span>
                     <div className="flex gap-2">
                       <button
                         type="button"
