@@ -10,8 +10,10 @@ interface Task {
 
 export default function TodoApp() {
   const [tareas, setTareas] = useState<Task[]>([]);
-  const [inputText, setInputText] = useState("");
 
+  const [deletedtareas, setdeletedTareas] = useState<Task[]>([]);
+  const [inputText, setInputText] = useState('');
+  
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
 
@@ -84,6 +86,7 @@ export default function TodoApp() {
 
         {/*listado de tareas*/}
         <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-zinc-400">Tareas Activas</h2>
           {tareas.length === 0 ? (
             <p className="text-center text-zinc-500 text-sm">
               No hay tareas. Escribe algo y presiona Enter.
@@ -159,7 +162,64 @@ export default function TodoApp() {
               </div>
             ))
           )}
+          <p className="text-xs text-zinc-500 pt-1">
+            Total de tareas activas: {tareas.length}
+          </p>
         </div>
+
+        <div className="mt-6 pt-5 border-t border-zinc-800/80 space-y-3">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-zinc-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <line x1="10" y1="11" x2="10" y2="17" />
+                  <line x1="14" y1="11" x2="14" y2="17" />
+                </svg>
+                Papelera
+              </span>
+              <span className="px-2 py-0.5 text-[10px] font-medium bg-zinc-800 text-zinc-400 rounded-full">
+                {deletedtareas.length}
+              </span>
+            </div>
+          </div>
+
+          {deletedtareas.length === 0 ? (
+            <div className="py-4 text-center border border-dashed border-zinc-800/60 rounded-xl">
+              <p className="text-xs text-zinc-600">No hay elementos eliminados</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {deletedtareas.map((task) => (
+                <div
+                  key={task.id}
+                  className="group flex items-center justify-between p-3 bg-zinc-900/40 hover:bg-zinc-900 border border-zinc-800/60 rounded-xl transition-all gap-3"
+                >
+                  <span className="text-sm text-zinc-500 line-through truncate flex-1 font-light">
+                    {task.text}
+                  </span>
+                  <div className="flex items-center gap-1.5 opacity-90 group-hover:opacity-100">
+                    <button
+                      type="button"
+                      className="px-2.5 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors font-medium"
+                    >
+                      Restaurar
+                    </button>
+                    <button
+                      type="button"
+                      className="px-2.5 py-1 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors font-medium"
+                    >
+                      Borrar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
     </main>
   );
