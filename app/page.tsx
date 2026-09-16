@@ -60,9 +60,29 @@ export default function TodoApp() {
     );
   };
 
-  // delete  - eliminar tarea -nuevo
+   // delete - ya no borra la tarea: la manda a la papelera -nuevo
   const handleDelete = (id: number) => {
-    setTareas((prev) => prev.filter((task) => task.id !== id));
+    const tarea = tareas.find((t) => t.id === id);
+    if (!tarea) return;
+
+    if (editingId === id) setEditingId(null);
+
+    setTareas((prev) => prev.filter((t) => t.id !== id));
+    setdeletedTareas((prev) => [{ ...tarea, completed: false }, ...prev]);
+  };
+
+  // restaurar - devuelve la tarea de la papelera a las activas -nuevo
+  const handleRestore = (id: number) => {
+    const tarea = deletedtareas.find((t) => t.id === id);
+    if (!tarea) return;
+
+    setdeletedTareas((prev) => prev.filter((t) => t.id !== id));
+    setTareas((prev) => [...prev, tarea]);
+  };
+
+  // borrar definitivo - saca la tarea de la papelera para siempre -nuevo
+  const handleDeleteForever = (id: number) => {
+    setdeletedTareas((prev) => prev.filter((t) => t.id !== id));
   };
 
   return (
@@ -203,12 +223,14 @@ export default function TodoApp() {
                   <div className="flex items-center gap-1.5 opacity-90 group-hover:opacity-100">
                     <button
                       type="button"
+                      onClick={() => handleRestore(task.id)}
                       className="px-2.5 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors font-medium"
                     >
                       Restaurar
                     </button>
                     <button
                       type="button"
+                      onClick={() => handleDeleteForever(task.id)}
                       className="px-2.5 py-1 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors font-medium"
                     >
                       Borrar
