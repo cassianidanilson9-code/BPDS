@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, KeyboardEvent } from "react";
+import { useState, KeyboardEvent } from "react";
 
 interface Task {
   id: number;
@@ -8,56 +8,14 @@ interface Task {
   completed?: boolean;
 }
 
-// Claves usadas en localStorage -nuevo
-const STORAGE_KEY_TAREAS = "todo-app:tareas";
-const STORAGE_KEY_PAPELERA = "todo-app:papelera";
-
 export default function TodoApp() {
   const [tareas, setTareas] = useState<Task[]>([]);
+
   const [deletedtareas, setdeletedTareas] = useState<Task[]>([]);
   const [inputText, setInputText] = useState('');
-
+  
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
-
-  // evita que el efecto de guardado sobrescriba el localStorage
-  // con arrays vacíos antes de terminar de cargar los datos guardados -nuevo
-  const isHydrated = useRef(false);
-
-  // carga inicial desde localStorage (se ejecuta una sola vez al montar) -nuevo
-  useEffect(() => {
-    try {
-      const tareasGuardadas = localStorage.getItem(STORAGE_KEY_TAREAS);
-      const papeleraGuardada = localStorage.getItem(STORAGE_KEY_PAPELERA);
-
-      if (tareasGuardadas) setTareas(JSON.parse(tareasGuardadas));
-      if (papeleraGuardada) setdeletedTareas(JSON.parse(papeleraGuardada));
-    } catch (error) {
-      console.error("Error al cargar datos guardados:", error);
-    } finally {
-      isHydrated.current = true;
-    }
-  }, []);
-
-  // guarda tareas activas cada vez que cambian -nuevo
-  useEffect(() => {
-    if (!isHydrated.current) return; // evita pisar el storage antes de cargar
-    try {
-      localStorage.setItem(STORAGE_KEY_TAREAS, JSON.stringify(tareas));
-    } catch (error) {
-      console.error("Error al guardar tareas:", error);
-    }
-  }, [tareas]);
-
-  // guarda papelera cada vez que cambia -nuevo
-  useEffect(() => {
-    if (!isHydrated.current) return;
-    try {
-      localStorage.setItem(STORAGE_KEY_PAPELERA, JSON.stringify(deletedtareas));
-    } catch (error) {
-      console.error("Error al guardar la papelera:", error);
-    }
-  }, [deletedtareas]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -81,7 +39,7 @@ export default function TodoApp() {
     setEditText(task.text);
   };
 
-
+  
   // guarda cambios 
   const saveEdit = (id: number) => {
 
@@ -127,15 +85,6 @@ export default function TodoApp() {
     setdeletedTareas((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // vacía toda la papelera de una vez -nuevo
-  const handleEmptyTrash = () => {
-    if (deletedtareas.length === 0) return;
-    const confirmado = window.confirm(
-      "¿Vaciar la papelera? Esta acción no se puede deshacer.",
-    );
-    if (confirmado) setdeletedTareas([]);
-  };
-
   return (
     <main className="flex min-h-screen flex-col items-center justify-start p-6 bg-zinc-950 text-white">
       <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-xl">
@@ -178,7 +127,7 @@ export default function TodoApp() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter") saveEdit(task.id);
                       }}
-
+                      
                       // auto guardado al salir de campo  -nuevo
                       onBlur={() => saveEdit(task.id)}
 
@@ -255,17 +204,6 @@ export default function TodoApp() {
                 {deletedtareas.length}
               </span>
             </div>
-
-            {/* vaciar papelera completa -nuevo */}
-            {deletedtareas.length > 0 && (
-              <button
-                type="button"
-                onClick={handleEmptyTrash}
-                className="text-[11px] font-medium text-zinc-500 hover:text-red-400 transition-colors"
-              >
-                Vaciar papelera
-              </button>
-            )}
           </div>
 
           {deletedtareas.length === 0 ? (
