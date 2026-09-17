@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef, KeyboardEvent } from "react";
+import { useState, KeyboardEvent, useEffect } from 'react';
 
 interface Task {
   id: number;
@@ -8,62 +8,48 @@ interface Task {
   completed?: boolean;
 }
 
-// Claves usadas en localStorage -nuevo
-const STORAGE_KEY_TAREAS = "todo-app:tareas";
-const STORAGE_KEY_PAPELERA = "todo-app:papelera";
-
 export default function TodoApp() {
   const [tareas, setTareas] = useState<Task[]>([]);
   const [deletedtareas, setdeletedTareas] = useState<Task[]>([]);
+  
   const [inputText, setInputText] = useState('');
-
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editText, setEditText] = useState("");
+  const [editText, setEditText] = useState('');
+  
+  const [mounted, setMounted] = useState(false);
 
-  // evita que el efecto de guardado sobrescriba el localStorage
-  // con arrays vacíos antes de terminar de cargar los datos guardados -nuevo
-  const isHydrated = useRef(false);
-
-  // carga inicial desde localStorage (se ejecuta una sola vez al montar) -nuevo
   useEffect(() => {
+    setMounted(true);
     try {
-      const tareasGuardadas = localStorage.getItem(STORAGE_KEY_TAREAS);
-      const papeleraGuardada = localStorage.getItem(STORAGE_KEY_PAPELERA);
+      const savedTareas = localStorage.getItem('cuc_tareas');
+      if (savedTareas) setTareas(JSON.parse(savedTareas));
 
-      if (tareasGuardadas) setTareas(JSON.parse(tareasGuardadas));
-      if (papeleraGuardada) setdeletedTareas(JSON.parse(papeleraGuardada));
-    } catch (error) {
-      console.error("Error al cargar datos guardados:", error);
-    } finally {
-      isHydrated.current = true;
+      const savedDeleted = localStorage.getItem('cuc_deletedtareas');
+      if (savedDeleted) setdeletedTareas(JSON.parse(savedDeleted));
+    } catch (e) {
+      console.error("Error al cargar datos del localStorage", e);
     }
   }, []);
 
-  // guarda tareas activas cada vez que cambian -nuevo
   useEffect(() => {
-    if (!isHydrated.current) return; // evita pisar el storage antes de cargar
-    try {
-      localStorage.setItem(STORAGE_KEY_TAREAS, JSON.stringify(tareas));
-    } catch (error) {
-      console.error("Error al guardar tareas:", error);
-    }
-  }, [tareas]);
+    if (!mounted) return;
+    localStorage.setItem('cuc_tareas', JSON.stringify(tareas));
+  }, [tareas, mounted]);
 
-  // guarda papelera cada vez que cambia -nuevo
   useEffect(() => {
-    if (!isHydrated.current) return;
-    try {
-      localStorage.setItem(STORAGE_KEY_PAPELERA, JSON.stringify(deletedtareas));
-    } catch (error) {
-      console.error("Error al guardar la papelera:", error);
-    }
-  }, [deletedtareas]);
+    if (!mounted) return;
+    localStorage.setItem('cuc_deletedtareas', JSON.stringify(deletedtareas));
+  }, [deletedtareas, mounted]);
+
+  if (!mounted) {
+    return null;
+  }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       e.preventDefault();
       const textoLimpio = inputText.trim();
-      if (textoLimpio === "") return;
+      if (textoLimpio === '') return;
 
       const nuevaTarea: Task = {
         id: Date.now(),
@@ -71,69 +57,48 @@ export default function TodoApp() {
       };
 
       setTareas((prev) => [...prev, nuevaTarea]);
-      setInputText("");
+      setInputText('');
     }
   };
 
-  //entra en modo ediccion
   const startEditing = (task: Task) => {
     setEditingId(task.id);
     setEditText(task.text);
   };
 
-
-  // guarda cambios 
   const saveEdit = (id: number) => {
+    if (editingId !== id) return;
 
-    if (editingId !== id) return; // Evita guardar si no es la tarea que se está editando -nuevo
-
-    if (editText.trim() !== "") {
+    if (editText.trim() !== '') {
       setTareas((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, text: editText.trim() } : t)),
+        prev.map((t) => (t.id === id ? { ...t, text: editText.trim() } : t))
       );
     }
     setEditingId(null);
   };
 
-  // update - marcar-desenmarcar como completada (solo tacha)
   const toggleComplete = (id: number) => {
     setTareas((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
+      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
     );
   };
 
-   // delete - ya no borra la tarea: la manda a la papelera -nuevo
   const handleDelete = (id: number) => {
-    const tarea = tareas.find((t) => t.id === id);
-    if (!tarea) return;
-
-    if (editingId === id) setEditingId(null);
-
-    setTareas((prev) => prev.filter((t) => t.id !== id));
-    setdeletedTareas((prev) => [{ ...tarea, completed: false }, ...prev]);
+    const taskToDelete = tareas.find((t) => t.id === id);
+    if (!taskToDelete) return;
+    setTareas((prev) => prev.filter((task) => task.id !== id));
+    setdeletedTareas((prev) => [{ ...taskToDelete, completed: false }, ...prev]);
   };
 
-  // restaurar - devuelve la tarea de la papelera a las activas -nuevo
   const handleRestore = (id: number) => {
-    const tarea = deletedtareas.find((t) => t.id === id);
-    if (!tarea) return;
-
-    setdeletedTareas((prev) => prev.filter((t) => t.id !== id));
-    setTareas((prev) => [...prev, tarea]);
+    const taskToRestore = deletedtareas.find((t) => t.id === id);
+    if (!taskToRestore) return;
+    setdeletedTareas((prev) => prev.filter((task) => task.id !== id));
+    setTareas((prev) => [...prev, taskToRestore]);
   };
 
-  // borrar definitivo - saca la tarea de la papelera para siempre -nuevo
-  const handleDeleteForever = (id: number) => {
-    setdeletedTareas((prev) => prev.filter((t) => t.id !== id));
-  };
-
-  // vacía toda la papelera de una vez -nuevo
-  const handleEmptyTrash = () => {
-    if (deletedtareas.length === 0) return;
-    const confirmado = window.confirm(
-      "¿Vaciar la papelera? Esta acción no se puede deshacer.",
-    );
-    if (confirmado) setdeletedTareas([]);
+  const handlePermanentDelete = (id: number) => {
+    setdeletedTareas((prev) => prev.filter((task) => task.id !== id));
   };
 
   return (
@@ -143,7 +108,6 @@ export default function TodoApp() {
           Mis Tareas - Grupo CUC
         </h1>
 
-        {/* input para crear una tarea nueva */}
         <div className="mb-6">
           <input
             type="text"
@@ -155,7 +119,6 @@ export default function TodoApp() {
           />
         </div>
 
-        {/*listado de tareas*/}
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-zinc-400">Tareas Activas</h2>
           {tareas.length === 0 ? (
@@ -169,19 +132,15 @@ export default function TodoApp() {
                 className="flex items-center justify-between p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg gap-2"
               >
                 {editingId === task.id ? (
-                  // modo ediccion input con autoguardado 
                   <div className="flex flex-1 gap-2 items-center">
                     <input
                       type="text"
                       value={editText}
                       onChange={(e) => setEditText(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") saveEdit(task.id);
+                        if (e.key === 'Enter') saveEdit(task.id);
                       }}
-
-                      // auto guardado al salir de campo  -nuevo
                       onBlur={() => saveEdit(task.id)}
-
                       className="flex-1 px-2 py-1 text-sm bg-zinc-700 border border-zinc-600 rounded text-white focus:outline-none"
                       autoFocus
                     />
@@ -194,7 +153,6 @@ export default function TodoApp() {
                     </button>
                   </div>
                 ) : (
-                  // modo normal checkbox texto acciones 
                   <>
                     <input
                       type="checkbox"
@@ -206,8 +164,8 @@ export default function TodoApp() {
                     <span
                       className={`text-sm break-all flex-1 ${
                         task.completed
-                          ? "text-zinc-500 line-through"
-                          : "text-zinc-200"
+                          ? 'text-zinc-500 line-through'
+                          : 'text-zinc-200'
                       }`}
                     >
                       {task.text}
@@ -255,17 +213,6 @@ export default function TodoApp() {
                 {deletedtareas.length}
               </span>
             </div>
-
-            {/* vaciar papelera completa -nuevo */}
-            {deletedtareas.length > 0 && (
-              <button
-                type="button"
-                onClick={handleEmptyTrash}
-                className="text-[11px] font-medium text-zinc-500 hover:text-red-400 transition-colors"
-              >
-                Vaciar papelera
-              </button>
-            )}
           </div>
 
           {deletedtareas.length === 0 ? (
@@ -292,7 +239,7 @@ export default function TodoApp() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteForever(task.id)}
+                      onClick={() => handlePermanentDelete(task.id)}
                       className="px-2.5 py-1 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors font-medium"
                     >
                       Borrar
