@@ -10,6 +10,7 @@ interface Task {
 
 export default function TodoApp() {
   const [tareas, setTareas] = useState<Task[]>([]);
+
   const [deletedtareas, setdeletedTareas] = useState<Task[]>([]);
   
   const [inputText, setInputText] = useState('');
