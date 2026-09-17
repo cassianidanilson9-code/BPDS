@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, KeyboardEvent } from "react";
+import { useState, KeyboardEvent, useEffect } from 'react';
 
 interface Task {
   id: number;
@@ -12,16 +12,45 @@ export default function TodoApp() {
   const [tareas, setTareas] = useState<Task[]>([]);
 
   const [deletedtareas, setdeletedTareas] = useState<Task[]>([]);
-  const [inputText, setInputText] = useState('');
   
+  const [inputText, setInputText] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editText, setEditText] = useState("");
+  const [editText, setEditText] = useState('');
+  
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    try {
+      const savedTareas = localStorage.getItem('cuc_tareas');
+      if (savedTareas) setTareas(JSON.parse(savedTareas));
+
+      const savedDeleted = localStorage.getItem('cuc_deletedtareas');
+      if (savedDeleted) setdeletedTareas(JSON.parse(savedDeleted));
+    } catch (e) {
+      console.error("Error al cargar datos del localStorage", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    localStorage.setItem('cuc_tareas', JSON.stringify(tareas));
+  }, [tareas, mounted]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    localStorage.setItem('cuc_deletedtareas', JSON.stringify(deletedtareas));
+  }, [deletedtareas, mounted]);
+
+  if (!mounted) {
+    return null;
+  }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       e.preventDefault();
       const textoLimpio = inputText.trim();
-      if (textoLimpio === "") return;
+      if (textoLimpio === '') return;
 
       const nuevaTarea: Task = {
         id: Date.now(),
@@ -29,60 +58,48 @@ export default function TodoApp() {
       };
 
       setTareas((prev) => [...prev, nuevaTarea]);
-      setInputText("");
+      setInputText('');
     }
   };
 
-  //entra en modo ediccion
   const startEditing = (task: Task) => {
     setEditingId(task.id);
     setEditText(task.text);
   };
 
-  
-  // guarda cambios 
   const saveEdit = (id: number) => {
+    if (editingId !== id) return;
 
-    if (editingId !== id) return; // Evita guardar si no es la tarea que se está editando -nuevo
-
-    if (editText.trim() !== "") {
+    if (editText.trim() !== '') {
       setTareas((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, text: editText.trim() } : t)),
+        prev.map((t) => (t.id === id ? { ...t, text: editText.trim() } : t))
       );
     }
     setEditingId(null);
   };
 
-  // update - marcar-desenmarcar como completada (solo tacha)
   const toggleComplete = (id: number) => {
     setTareas((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
+      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
     );
   };
 
-   // delete - ya no borra la tarea: la manda a la papelera -nuevo
   const handleDelete = (id: number) => {
-    const tarea = tareas.find((t) => t.id === id);
-    if (!tarea) return;
-
-    if (editingId === id) setEditingId(null);
-
-    setTareas((prev) => prev.filter((t) => t.id !== id));
-    setdeletedTareas((prev) => [{ ...tarea, completed: false }, ...prev]);
+    const taskToDelete = tareas.find((t) => t.id === id);
+    if (!taskToDelete) return;
+    setTareas((prev) => prev.filter((task) => task.id !== id));
+    setdeletedTareas((prev) => [{ ...taskToDelete, completed: false }, ...prev]);
   };
 
-  // restaurar - devuelve la tarea de la papelera a las activas -nuevo
   const handleRestore = (id: number) => {
-    const tarea = deletedtareas.find((t) => t.id === id);
-    if (!tarea) return;
-
-    setdeletedTareas((prev) => prev.filter((t) => t.id !== id));
-    setTareas((prev) => [...prev, tarea]);
+    const taskToRestore = deletedtareas.find((t) => t.id === id);
+    if (!taskToRestore) return;
+    setdeletedTareas((prev) => prev.filter((task) => task.id !== id));
+    setTareas((prev) => [...prev, taskToRestore]);
   };
 
-  // borrar definitivo - saca la tarea de la papelera para siempre -nuevo
-  const handleDeleteForever = (id: number) => {
-    setdeletedTareas((prev) => prev.filter((t) => t.id !== id));
+  const handlePermanentDelete = (id: number) => {
+    setdeletedTareas((prev) => prev.filter((task) => task.id !== id));
   };
 
   return (
@@ -92,7 +109,6 @@ export default function TodoApp() {
           Mis Tareas - Grupo CUC
         </h1>
 
-        {/* input para crear una tarea nueva */}
         <div className="mb-6">
           <input
             type="text"
@@ -104,7 +120,6 @@ export default function TodoApp() {
           />
         </div>
 
-        {/*listado de tareas*/}
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-zinc-400">Tareas Activas</h2>
           {tareas.length === 0 ? (
@@ -118,19 +133,15 @@ export default function TodoApp() {
                 className="flex items-center justify-between p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg gap-2"
               >
                 {editingId === task.id ? (
-                  // modo ediccion input con autoguardado 
                   <div className="flex flex-1 gap-2 items-center">
                     <input
                       type="text"
                       value={editText}
                       onChange={(e) => setEditText(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") saveEdit(task.id);
+                        if (e.key === 'Enter') saveEdit(task.id);
                       }}
-                      
-                      // auto guardado al salir de campo  -nuevo
                       onBlur={() => saveEdit(task.id)}
-
                       className="flex-1 px-2 py-1 text-sm bg-zinc-700 border border-zinc-600 rounded text-white focus:outline-none"
                       autoFocus
                     />
@@ -143,7 +154,6 @@ export default function TodoApp() {
                     </button>
                   </div>
                 ) : (
-                  // modo normal checkbox texto acciones 
                   <>
                     <input
                       type="checkbox"
@@ -155,8 +165,8 @@ export default function TodoApp() {
                     <span
                       className={`text-sm break-all flex-1 ${
                         task.completed
-                          ? "text-zinc-500 line-through"
-                          : "text-zinc-200"
+                          ? 'text-zinc-500 line-through'
+                          : 'text-zinc-200'
                       }`}
                     >
                       {task.text}
@@ -230,7 +240,7 @@ export default function TodoApp() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteForever(task.id)}
+                      onClick={() => handlePermanentDelete(task.id)}
                       className="px-2.5 py-1 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors font-medium"
                     >
                       Borrar
