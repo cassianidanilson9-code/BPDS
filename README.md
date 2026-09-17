@@ -1,5 +1,8 @@
 # 🚀 Aplicación de Tareas - Grupo CUC
 
+**Integrantes:**
+* Danilson Cassiani Camacho, Jairo Perez Tinoco, Cristian gonzales gallardo
+
 Aplicación web desarrollada con **Next.js**, **React** y **Tailwind CSS** para la gestión de tareas (CRUD) con persistencia de datos local y sistema de papelera.
 
 ---
@@ -24,9 +27,7 @@ Aplicación web desarrollada con **Next.js**, **React** y **Tailwind CSS** para 
 ## ⚙️ Instalación
 
 1. Clona el repositorio:
-   ```bash
-   git clone <https://github.com/cassianidanilson9-code/BPDS>
-   ## ⚙️ Instalación
+   `git clone https://github.com/cassianidanilson9-code/BPDS`
 2. Instala las dependencias:
    `npm install`
 3. Ejecuta el servidor de desarrollo:
