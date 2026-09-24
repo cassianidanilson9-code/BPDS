@@ -18,6 +18,7 @@ export default function TodoApp() {
   const [editText, setEditText] = useState('');
 
   const [mounted, setMounted] = useState(false);
+  const [trashOpen, setTrashOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -234,62 +235,124 @@ export default function TodoApp() {
           )}
         </div>
 
-        {/* Papelera */}
-        <div className="mt-6 pt-5 border-t border-zinc-800/80 space-y-3">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-zinc-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      </div>
+
+      {/* Botón flotante para abrir la papelera */}
+      <button
+        type="button"
+        onClick={() => setTrashOpen(true)}
+        aria-label="Abrir papelera"
+        className="fixed bottom-6 right-6 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-900/40 hover:shadow-xl hover:shadow-indigo-900/50 hover:scale-105 active:scale-95 transition-all"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 6h18" />
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          <line x1="10" y1="11" x2="10" y2="17" />
+          <line x1="14" y1="11" x2="14" y2="17" />
+        </svg>
+        {deletedtareas.length > 0 && (
+          <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1 text-[10px] font-bold bg-red-500 text-white rounded-full border-2 border-zinc-950">
+            {deletedtareas.length}
+          </span>
+        )}
+      </button>
+
+      {/* Overlay */}
+      <div
+        onClick={() => setTrashOpen(false)}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300 ${
+          trashOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      />
+
+      {/* Drawer de la papelera */}
+      <div
+        className={`fixed top-0 right-0 h-full w-full max-w-sm bg-zinc-900 border-l border-zinc-800 shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${
+          trashOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <div className="flex items-center justify-between p-5 border-b border-zinc-800">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-zinc-800 text-zinc-300">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-white">Papelera</h2>
+              <p className="text-xs text-zinc-500">{deletedtareas.length} elemento(s)</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setTrashOpen(false)}
+            aria-label="Cerrar papelera"
+            className="flex items-center justify-center w-8 h-8 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5 space-y-2">
+          {deletedtareas.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center px-6">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-zinc-800/60 mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600">
                   <path d="M3 6h18" />
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
                   <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                  <line x1="10" y1="11" x2="10" y2="17" />
-                  <line x1="14" y1="11" x2="14" y2="17" />
                 </svg>
-                Papelera
-              </span>
-              <span className="px-2 py-0.5 text-[10px] font-medium bg-zinc-800 text-zinc-400 rounded-full">
-                {deletedtareas.length}
-              </span>
-            </div>
-          </div>
-
-          {deletedtareas.length === 0 ? (
-            <div className="py-4 text-center border border-dashed border-zinc-800/60 rounded-xl">
-              <p className="text-xs text-zinc-600">No hay elementos eliminados</p>
+              </div>
+              <p className="text-sm text-zinc-500">La papelera está vacía</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {deletedtareas.map((task) => (
-                <div
-                  key={task.id}
-                  className="group flex items-center justify-between p-3 bg-zinc-900/40 hover:bg-zinc-900 border border-zinc-800/60 rounded-xl transition-all gap-3"
-                >
-                  <span className="text-sm text-zinc-500 line-through truncate flex-1 font-light">
-                    {task.text}
-                  </span>
-                  <div className="flex items-center gap-1.5 opacity-90 group-hover:opacity-100">
-                    <button
-                      type="button"
-                      onClick={() => handleRestore(task.id)}
-                      className="px-2.5 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors font-medium"
-                    >
-                      Restaurar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handlePermanentDelete(task.id)}
-                      className="px-2.5 py-1 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors font-medium"
-                    >
-                      Borrar
-                    </button>
-                  </div>
+            deletedtareas.map((task) => (
+              <div
+                key={task.id}
+                className="group flex items-center justify-between p-3 bg-zinc-800/40 hover:bg-zinc-800 border border-zinc-800 rounded-xl transition-all gap-3"
+              >
+                <span className="text-sm text-zinc-500 line-through truncate flex-1 font-light">
+                  {task.text}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleRestore(task.id)}
+                    aria-label="Restaurar tarea"
+                    title="Restaurar"
+                    className="flex items-center justify-center w-8 h-8 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                      <path d="M3 3v5h5" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePermanentDelete(task.id)}
+                    aria-label="Borrar permanentemente"
+                    title="Borrar permanentemente"
+                    className="flex items-center justify-center w-8 h-8 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 6h18" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))
           )}
         </div>
-
       </div>
     </main>
   );
